@@ -51,11 +51,6 @@ def show_preview(candidates: list[dict]) -> None:
     print("노션 조회는 자동 완료되었습니다. 아래에서 발송 여부를 직접 확인하세요.")
 
 
-def confirm_send() -> bool:
-    answer = input("\n위 목록으로 발송하시겠습니까? (Y/N): ").strip().upper()
-    return answer == "Y"
-
-
 def parse_selection_indices(raw: str, count: int) -> list[int]:
     raw = (raw or "").strip()
     if not raw:
@@ -135,13 +130,14 @@ def main() -> int:
         return _write_results_or_fail(prechecked_results)
 
     show_preview(send_candidates)
-    if not confirm_send():
+    selected = prompt_recipients(send_candidates)
+    if selected is None:
         print("발송을 취소했습니다")
         app_logger.info("담당자 확인에서 발송 취소")
         return 0
 
     send_results = []
-    for candidate in send_candidates:
+    for candidate in selected:
         sender = COHORT_SENDER_MAP.get(candidate.get("resolved_cohort"))
         send_result = send_lms(candidate["phone"], sender, SMS_MESSAGE)
         send_results.append(_row_from_send_result(candidate, sender, send_result))
