@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock, patch
 
+import requests
+
 from ppurio_client import PPURIO_API_URL, send_lms
 
 
@@ -13,6 +15,15 @@ class TestSendLms:
 
         assert result == {"result": "매핑없음"}
         mock_post.assert_not_called()
+
+    def test_returns_timeout_failure_on_requests_timeout(self):
+        with patch("ppurio_client.requests.post") as mock_post:
+            mock_post.side_effect = requests.exceptions.Timeout()
+            result = send_lms(
+                phone="01012345678", sender="01025327302", message="테스트"
+            )
+
+        assert result["result"] == "실패(타임아웃)"
 
     def test_returns_failure_on_api_error(self):
         with patch("ppurio_client.requests.post") as mock_post:

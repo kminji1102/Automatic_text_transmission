@@ -26,18 +26,6 @@ def normalize_phone(raw: str) -> str | None:
     return None
 
 
-def dedup_by_phone(interviewees: list[dict]) -> list[dict]:
-    """동일 연락처 기준 중복 제거. 첫 번째 행만 유지."""
-    seen = set()
-    result = []
-    for item in interviewees:
-        phone = item.get("phone")
-        if phone and phone not in seen:
-            seen.add(phone)
-            result.append(item)
-    return result
-
-
 def build_today_filter(field_name: str) -> dict:
     """KST 기준 오늘 00:00 ~ 23:59를 UTC로 변환한 노션 날짜 필터"""
     now_kst = datetime.now(KST)
@@ -87,6 +75,8 @@ def fetch_today_interviewees() -> list[dict]:
         if not data.get("has_more"):
             break
         start_cursor = data.get("next_cursor")
+        if not start_cursor:
+            break
 
     interviewees = [_parse_page(page) for page in pages]
     return _dedup_preserving_invalid_phone(interviewees)
