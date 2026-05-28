@@ -25,7 +25,13 @@ def send_lms(phone: str, sender: str | None, message: str) -> dict:
             timeout=API_TIMEOUT,
         )
         response.raise_for_status()
-        return {"result": "성공", "response": response.json()}
+        try:
+            body = response.json()
+        except Exception:
+            body = {}
+        return {"result": "성공", "response": body}
+    except requests.exceptions.Timeout:
+        return {"result": "실패(타임아웃)", "error_msg": "API 응답 타임아웃"}
     except Exception as exc:
         return {"result": "실패", "error_msg": str(exc)}
 

@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 import config
 from notion_client import (
     build_today_filter,
-    dedup_by_phone,
     fetch_today_interviewees,
     normalize_phone,
 )
@@ -33,27 +32,6 @@ class TestNormalizePhone:
 
     def test_none_input(self):
         assert normalize_phone(None) is None
-
-
-class TestDedupByPhone:
-    def test_removes_duplicate(self):
-        data = [
-            {"name": "홍길동", "phone": "01012345678", "cohort": "SFAC 33기"},
-            {"name": "홍길동2", "phone": "01012345678", "cohort": "SFAC 33기"},
-        ]
-        result = dedup_by_phone(data)
-        assert len(result) == 1
-        assert result[0]["name"] == "홍길동"
-
-    def test_keeps_unique(self):
-        data = [
-            {"name": "홍길동", "phone": "01012345678", "cohort": "SFAC 33기"},
-            {"name": "김철수", "phone": "01098765432", "cohort": "플레이데이터 34기"},
-        ]
-        assert len(dedup_by_phone(data)) == 2
-
-    def test_empty_list(self):
-        assert dedup_by_phone([]) == []
 
 
 class TestBuildTodayFilter:
