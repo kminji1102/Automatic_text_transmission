@@ -1,6 +1,6 @@
 import pytest
 
-from main import parse_selection_indices
+from main import parse_selection_indices, prompt_recipients
 
 
 class TestParseSelectionIndices:
@@ -33,3 +33,39 @@ class TestParseSelectionIndices:
     def test_non_numeric_raises(self):
         with pytest.raises(ValueError):
             parse_selection_indices("a", 4)
+
+
+class TestPromptRecipients:
+    def _candidates(self):
+        return [
+            {"name": "A", "phone": "01000000001"},
+            {"name": "B", "phone": "01000000002"},
+            {"name": "C", "phone": "01000000003"},
+        ]
+
+    def test_cancel_with_n(self, monkeypatch):
+        monkeypatch.setattr("builtins.input", lambda prompt="": "N")
+        assert prompt_recipients(self._candidates()) is None
+
+    def test_select_then_confirm_yes(self, monkeypatch):
+        answers = iter(["1,3", "Y"])
+        monkeypatch.setattr("builtins.input", lambda prompt="": next(answers))
+        result = prompt_recipients(self._candidates())
+        assert [c["name"] for c in result] == ["A", "C"]
+
+    def test_select_then_confirm_no(self, monkeypatch):
+        answers = iter(["2", "N"])
+        monkeypatch.setattr("builtins.input", lambda prompt="": next(answers))
+        assert prompt_recipients(self._candidates()) is None
+
+    def test_invalid_then_valid(self, monkeypatch):
+        answers = iter(["9", "2", "Y"])
+        monkeypatch.setattr("builtins.input", lambda prompt="": next(answers))
+        result = prompt_recipients(self._candidates())
+        assert [c["name"] for c in result] == ["B"]
+
+    def test_eof_returns_none(self, monkeypatch):
+        def raise_eof(prompt=""):
+            raise EOFError()
+        monkeypatch.setattr("builtins.input", raise_eof)
+        assert prompt_recipients(self._candidates()) is None
