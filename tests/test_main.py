@@ -69,3 +69,21 @@ class TestPromptRecipients:
             raise EOFError()
         monkeypatch.setattr("builtins.input", raise_eof)
         assert prompt_recipients(self._candidates()) is None
+
+    def test_empty_then_yes_returns_all(self, monkeypatch):
+        answers = iter(["", "Y"])
+        monkeypatch.setattr("builtins.input", lambda prompt="": next(answers))
+        result = prompt_recipients(self._candidates())
+        assert [c["name"] for c in result] == ["A", "B", "C"]
+
+    def test_eof_on_confirm_returns_none(self, monkeypatch):
+        calls = iter(["1"])
+
+        def fake_input(prompt=""):
+            try:
+                return next(calls)
+            except StopIteration:
+                raise EOFError()
+
+        monkeypatch.setattr("builtins.input", fake_input)
+        assert prompt_recipients(self._candidates()) is None
