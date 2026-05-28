@@ -59,7 +59,7 @@ class TestFetchTodayInterviewees:
                     "phone_number": "010-1234-5678",
                 },
                 config.NOTION_FIELD_COHORT: {
-                    "select": {"name": "SFAC 33기"},
+                    "select": {"name": "SFAC 동작 33기"},
                 },
             }
         }
@@ -72,7 +72,7 @@ class TestFetchTodayInterviewees:
                     "rich_text": [{"plain_text": "010 1234 5678"}],
                 },
                 config.NOTION_FIELD_COHORT: {
-                    "rich_text": [{"plain_text": "SFAC 33기"}],
+                    "rich_text": [{"plain_text": "SFAC 동작 33기"}],
                 },
             }
         }
@@ -87,8 +87,8 @@ class TestFetchTodayInterviewees:
             {
                 "name": "홍길동",
                 "phone": "01012345678",
-                "cohort": "SFAC 33기",
-                "resolved_cohort": "33기",
+                "cohort": "SFAC 동작 33기",
+                "resolved_cohort": "동작",
             }
         ]
         request_kwargs = mock_post.call_args.kwargs

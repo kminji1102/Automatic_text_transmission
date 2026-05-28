@@ -41,10 +41,16 @@ class TestSendLms:
         token_response.json.return_value = {"token": "access-token-123"}
         send_response = MagicMock()
         send_response.json.return_value = {"result": "success"}
-        with patch(
-            "ppurio_client.requests.post",
-            side_effect=[token_response, send_response],
-        ) as mock_post:
+        with (
+            patch("ppurio_client.PPURIO_ID", "account-id"),
+            patch("ppurio_client.PPURIO_KEY", "api-key"),
+            patch("ppurio_client.uuid.uuid4") as mock_uuid4,
+            patch(
+                "ppurio_client.requests.post",
+                side_effect=[token_response, send_response],
+            ) as mock_post,
+        ):
+            mock_uuid4.return_value.hex = "ref-key-123"
             result = send_lms(
                 phone="010-1234-5678",
                 sender="010-2532-7302",
@@ -57,15 +63,26 @@ class TestSendLms:
         token_call = mock_post.call_args_list[0]
         assert token_call.args[0] == PPURIO_TOKEN_URL
         assert token_call.kwargs["headers"]["Authorization"].startswith("Basic ")
+        assert token_call.kwargs["headers"]["Content-Type"] == "application/json"
+        assert token_call.kwargs["json"] == {}
         assert token_call.kwargs["timeout"] == 30
 
         send_call = mock_post.call_args_list[1]
         assert send_call.args[0] == PPURIO_SEND_URL
         assert send_call.kwargs["headers"]["Authorization"] == "Bearer access-token-123"
+        assert send_call.kwargs["headers"]["Content-Type"] == "application/json"
         assert send_call.kwargs["timeout"] == 30
         assert send_call.kwargs["json"] == {
-            "type": "lms",
+            "account": "account-id",
+            "messageType": "LMS",
             "from": "01025327302",
-            "to": "01012345678",
             "content": "안녕하세요. SK네트웍스 Family AI 캠프입니다.",
+            "duplicateFlag": "N",
+            "refKey": "ref-key-123",
+            "targetCount": 1,
+            "targets": [
+                {
+                    "to": "01012345678",
+                }
+            ],
         }

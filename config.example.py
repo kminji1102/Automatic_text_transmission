@@ -21,13 +21,13 @@ NOTION_FIELD_COHORT = "기수"
 NOTION_FIELD_PHONE = "연락처"
 NOTION_FIELD_NAME = "이름"
 
-# 기수 -> 발신번호 매핑
-# 신규 기수 추가 또는 번호 변경 시 이 딕셔너리만 수정
-# 매핑은 포함(contains) 방식: "SFAC 33기" -> "33기" 키로 처리됨
+# 기수 필드 키워드 -> 발신번호 매핑
+# 신규 지역/번호 추가 또는 번호 변경 시 이 딕셔너리만 수정
+# 매핑은 포함(contains) 방식: "SFAC 동작 33기" -> "동작" 키로 처리됨
 COHORT_SENDER_MAP = {
-    "33기": "010XXXXXXXX",
-    "34기": "010XXXXXXXX",
-    # "35기": "010XXXXXXXX",  # 신규 기수 추가 예시
+    "동작": "010-6775-7302",
+    "서초": "010-2532-7302",
+    "G밸리": "010-2598-7302",
 }
 
 
@@ -35,7 +35,7 @@ def resolve_cohort(raw_cohort: str | None) -> str | None:
     """
     기수 필드 원본값에서 COHORT_SENDER_MAP 키가 포함되어 있는지 확인.
     포함된 키를 반환하고, 없으면 None 반환.
-    예: "SFAC 33기" -> "33기" / "35기 지원자" -> None
+    예: "SFAC 동작 33기" -> "동작" / "35기 지원자" -> None
     """
     if not raw_cohort:
         return None
