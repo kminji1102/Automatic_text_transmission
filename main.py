@@ -51,9 +51,52 @@ def show_preview(candidates: list[dict]) -> None:
     print("노션 조회는 자동 완료되었습니다. 아래에서 발송 여부를 직접 확인하세요.")
 
 
-def confirm_send() -> bool:
-    answer = input("\n위 목록으로 발송하시겠습니까? (Y/N): ").strip().upper()
-    return answer == "Y"
+def parse_selection_indices(raw: str, count: int) -> list[int]:
+    raw = (raw or "").strip()
+    if not raw:
+        return list(range(1, count + 1))
+    indices: list[int] = []
+    for token in raw.replace(",", " ").split():
+        if not token.isdigit():
+            raise ValueError(f"잘못된 입력: {token}")
+        num = int(token)
+        if num < 1 or num > count:
+            raise ValueError(f"범위를 벗어난 번호: {num}")
+        if num not in indices:
+            indices.append(num)
+    return sorted(indices)
+
+
+def prompt_recipients(send_candidates: list[dict]) -> list[dict] | None:
+    count = len(send_candidates)
+    while True:
+        try:
+            raw = input(
+                "\n발송할 번호를 입력하세요 (예: 1,3 / 전체는 Enter / 취소는 N): "
+            ).strip()
+        except EOFError:
+            return None
+        if raw.upper() == "N":
+            return None
+        try:
+            indices = parse_selection_indices(raw, count)
+        except ValueError as exc:
+            print(f"  입력 오류: {exc}. 다시 입력해주세요.")
+            continue
+        selected = [send_candidates[i - 1] for i in indices]
+        break
+
+    print(f"\n선택된 발송 대상 ({len(selected)}명):")
+    for index, candidate in enumerate(selected, 1):
+        print(f"  {index}. {candidate.get('name', '')} | {candidate.get('phone', '')}")
+
+    try:
+        answer = input("\n이대로 발송하시겠습니까? (Y/N): ").strip().upper()
+    except EOFError:
+        return None
+    if answer != "Y":
+        return None
+    return selected
 
 
 def main() -> int:
@@ -87,13 +130,14 @@ def main() -> int:
         return _write_results_or_fail(prechecked_results)
 
     show_preview(send_candidates)
-    if not confirm_send():
+    selected = prompt_recipients(send_candidates)
+    if selected is None:
         print("발송을 취소했습니다")
         app_logger.info("담당자 확인에서 발송 취소")
         return 0
 
     send_results = []
-    for candidate in send_candidates:
+    for candidate in selected:
         sender = COHORT_SENDER_MAP.get(candidate.get("resolved_cohort"))
         send_result = send_lms(candidate["phone"], sender, SMS_MESSAGE)
         send_results.append(_row_from_send_result(candidate, sender, send_result))

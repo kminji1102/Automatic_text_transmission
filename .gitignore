@@ -1,4 +1,5 @@
 .env
+config.py
 logs/*.csv
 logs/*.log
 venv/
