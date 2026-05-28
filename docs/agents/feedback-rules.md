@@ -18,3 +18,13 @@
 - **패턴**: 하나의 키를 `delenv`할 때 나머지 키들을 `setenv`로 명시하지 않음 → 실행 환경에 따라 테스트 동작이 달라짐
 - **올바른 방법**: 테스트 내에서 검증 대상 이외의 모든 관련 환경변수를 `monkeypatch.setenv`로 명시적으로 설정
 - **발생 에픽**: 에픽 1 (`test_raises_on_missing_ppurio_id`)
+
+### 규칙 4: 스펙에 에러 종류별 결과값이 명시된 경우 예외 분기 처리
+- **패턴**: `except Exception as exc: return {"result": "실패"}` — 모든 예외를 동일 결과값으로 처리
+- **올바른 방법**: FRD에 `결과=실패(타임아웃)` 등 구체적 결과값이 명시된 경우 `except requests.exceptions.Timeout`을 별도 분기로 먼저 잡고 해당 결과값 반환
+- **발생 에픽**: 에픽 2 (`ppurio_client.send_lms`)
+
+### 규칙 5: 공개 함수(exported)와 실제 코드 경로 일치 확인
+- **패턴**: 테스트로 검증되는 공개 함수가 실제 실행 경로에서는 호출되지 않고, 다른 내부 함수가 사용됨 (dead code)
+- **올바른 방법**: 공개 함수를 정의할 때 실제 호출 여부 확인. 내부 전용이면 `_` prefix 사용; 두 함수의 동작이 다르면 어느 쪽이 맞는지 명확히 결정
+- **발생 에픽**: 에픽 2 (`notion_client.dedup_by_phone` vs `_dedup_preserving_invalid_phone`)
