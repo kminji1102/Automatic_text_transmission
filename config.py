@@ -27,7 +27,7 @@ COHORT_SENDER_MAP = {
 }
 
 
-def resolve_cohort(raw_cohort: str) -> str | None:
+def resolve_cohort(raw_cohort: str | None) -> str | None:
     """
     기수 필드 원본값에서 COHORT_SENDER_MAP 키가 포함되어 있는지 확인.
     포함된 키를 반환하고, 없으면 None 반환.
