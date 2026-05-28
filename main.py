@@ -72,6 +72,38 @@ def parse_selection_indices(raw: str, count: int) -> list[int]:
     return sorted(indices)
 
 
+def prompt_recipients(send_candidates: list[dict]) -> list[dict] | None:
+    count = len(send_candidates)
+    while True:
+        try:
+            raw = input(
+                "\n발송할 번호를 입력하세요 (예: 1,3 / 전체는 Enter / 취소는 N): "
+            ).strip()
+        except EOFError:
+            return None
+        if raw.upper() == "N":
+            return None
+        try:
+            indices = parse_selection_indices(raw, count)
+        except ValueError as exc:
+            print(f"  입력 오류: {exc}. 다시 입력해주세요.")
+            continue
+        selected = [send_candidates[i - 1] for i in indices]
+        break
+
+    print(f"\n선택된 발송 대상 ({len(selected)}명):")
+    for index, candidate in enumerate(selected, 1):
+        print(f"  {index}. {candidate.get('name', '')} | {candidate.get('phone', '')}")
+
+    try:
+        answer = input("\n이대로 발송하시겠습니까? (Y/N): ").strip().upper()
+    except EOFError:
+        return None
+    if answer != "Y":
+        return None
+    return selected
+
+
 def main() -> int:
     app_logger = setup_logger()
 
