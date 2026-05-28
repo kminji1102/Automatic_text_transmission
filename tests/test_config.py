@@ -11,6 +11,7 @@ class TestValidateConfig:
     def test_raises_on_missing_ppurio_id(self, monkeypatch):
         monkeypatch.setenv("NOTION_TOKEN", "token")
         monkeypatch.delenv("PPURIO_ID", raising=False)
+        monkeypatch.setenv("PPURIO_KEY", "key")
         with pytest.raises(ValueError, match="PPURIO_ID"):
             validate_config()
 
