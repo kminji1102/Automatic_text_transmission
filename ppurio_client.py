@@ -1,10 +1,23 @@
+import base64
 import re
 
 import requests
 
-from config import API_TIMEOUT, SMS_TYPE
+from config import API_TIMEOUT, PPURIO_ID, PPURIO_KEY, SMS_TYPE
 
-PPURIO_API_URL = "[뿌리오 API 엔드포인트 확인 후 기입]"
+PPURIO_TOKEN_URL = "https://message.ppurio.com/v1/token"
+PPURIO_SEND_URL = "https://message.ppurio.com/v1/message"
+
+
+def _get_access_token() -> str:
+    encoded = base64.b64encode(f"{PPURIO_ID}:{PPURIO_KEY}".encode()).decode()
+    response = requests.post(
+        PPURIO_TOKEN_URL,
+        headers={"Authorization": f"Basic {encoded}"},
+        timeout=API_TIMEOUT,
+    )
+    response.raise_for_status()
+    return response.json()["token"]
 
 
 def send_lms(phone: str, sender: str | None, message: str) -> dict:
@@ -19,8 +32,10 @@ def send_lms(phone: str, sender: str | None, message: str) -> dict:
     }
 
     try:
+        token = _get_access_token()
         response = requests.post(
-            PPURIO_API_URL,
+            PPURIO_SEND_URL,
+            headers={"Authorization": f"Bearer {token}"},
             json=request_body,
             timeout=API_TIMEOUT,
         )

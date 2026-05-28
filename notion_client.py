@@ -6,8 +6,10 @@ import requests
 import config
 from config import KST
 
-NOTION_API_URL = f"https://api.notion.com/v1/databases/{config.NOTION_DB_ID}/query"
-NOTION_VERSION = "2022-06-28"
+NOTION_API_URL = (
+    f"https://api.notion.com/v1/data_sources/{config.NOTION_DATA_SOURCE_ID}/query"
+)
+NOTION_VERSION = "2025-09-03"
 
 
 def normalize_phone(raw: str) -> str | None:

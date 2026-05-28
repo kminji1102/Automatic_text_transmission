@@ -2,12 +2,13 @@ from unittest.mock import MagicMock, patch
 
 import requests
 
-from ppurio_client import PPURIO_API_URL, send_lms
+from ppurio_client import PPURIO_SEND_URL, PPURIO_TOKEN_URL, send_lms
 
 
 class TestSendLms:
-    def test_keeps_ppurio_api_url_placeholder(self):
-        assert PPURIO_API_URL == "[뿌리오 API 엔드포인트 확인 후 기입]"
+    def test_uses_official_ppurio_endpoints(self):
+        assert PPURIO_TOKEN_URL == "https://message.ppurio.com/v1/token"
+        assert PPURIO_SEND_URL == "https://message.ppurio.com/v1/message"
 
     def test_returns_mapping_missing_when_no_sender_without_api_call(self):
         with patch("ppurio_client.requests.post") as mock_post:
@@ -35,20 +36,34 @@ class TestSendLms:
         assert result["result"] == "실패"
         assert "Connection error" in result["error_msg"]
 
-    def test_sends_lms_request_body_with_timeout(self):
-        response = MagicMock()
-        response.json.return_value = {"result": "success"}
-        with patch("ppurio_client.requests.post", return_value=response) as mock_post:
+    def test_issues_token_then_sends_with_bearer(self):
+        token_response = MagicMock()
+        token_response.json.return_value = {"token": "access-token-123"}
+        send_response = MagicMock()
+        send_response.json.return_value = {"result": "success"}
+        with patch(
+            "ppurio_client.requests.post",
+            side_effect=[token_response, send_response],
+        ) as mock_post:
             result = send_lms(
                 phone="010-1234-5678",
                 sender="010-2532-7302",
                 message="안녕하세요. SK네트웍스 Family AI 캠프입니다.",
             )
 
-        response.raise_for_status.assert_called_once()
         assert result["result"] == "성공"
-        assert mock_post.call_args.kwargs["timeout"] == 30
-        assert mock_post.call_args.kwargs["json"] == {
+        assert mock_post.call_count == 2
+
+        token_call = mock_post.call_args_list[0]
+        assert token_call.args[0] == PPURIO_TOKEN_URL
+        assert token_call.kwargs["headers"]["Authorization"].startswith("Basic ")
+        assert token_call.kwargs["timeout"] == 30
+
+        send_call = mock_post.call_args_list[1]
+        assert send_call.args[0] == PPURIO_SEND_URL
+        assert send_call.kwargs["headers"]["Authorization"] == "Bearer access-token-123"
+        assert send_call.kwargs["timeout"] == 30
+        assert send_call.kwargs["json"] == {
             "type": "lms",
             "from": "01025327302",
             "to": "01012345678",
