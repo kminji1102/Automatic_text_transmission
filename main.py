@@ -56,6 +56,22 @@ def confirm_send() -> bool:
     return answer == "Y"
 
 
+def parse_selection_indices(raw: str, count: int) -> list[int]:
+    raw = (raw or "").strip()
+    if not raw:
+        return list(range(1, count + 1))
+    indices: list[int] = []
+    for token in raw.replace(",", " ").split():
+        if not token.isdigit():
+            raise ValueError(f"잘못된 입력: {token}")
+        num = int(token)
+        if num < 1 or num > count:
+            raise ValueError(f"범위를 벗어난 번호: {num}")
+        if num not in indices:
+            indices.append(num)
+    return sorted(indices)
+
+
 def main() -> int:
     app_logger = setup_logger()
 
