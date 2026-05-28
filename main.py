@@ -51,10 +51,10 @@ def show_preview(candidates: list[dict]) -> None:
     print("노션 조회는 자동 완료되었습니다. 아래에서 발송 여부를 직접 확인하세요.")
 
 
-def parse_selection_indices(raw: str, count: int) -> list[int]:
+def parse_exclusion_indices(raw: str, count: int) -> list[int]:
     raw = (raw or "").strip()
     if not raw:
-        return list(range(1, count + 1))
+        return []
     indices: list[int] = []
     for token in raw.replace(",", " ").split():
         if not token.isdigit():
@@ -72,21 +72,34 @@ def prompt_recipients(send_candidates: list[dict]) -> list[dict] | None:
     while True:
         try:
             raw = input(
-                "\n발송할 번호를 입력하세요 (예: 1,3 / 전체는 Enter / 취소는 N): "
+                "\n발송에서 제외할 번호를 입력하세요 (예: 1,3 / 제외 없음은 Enter / 취소는 N): "
             ).strip()
         except EOFError:
             return None
         if raw.upper() == "N":
             return None
         try:
-            indices = parse_selection_indices(raw, count)
+            excluded_indices = parse_exclusion_indices(raw, count)
         except ValueError as exc:
             print(f"  입력 오류: {exc}. 다시 입력해주세요.")
             continue
-        selected = [send_candidates[i - 1] for i in indices]
+        excluded_index_set = set(excluded_indices)
+        excluded = [send_candidates[i - 1] for i in excluded_indices]
+        selected = [
+            candidate
+            for index, candidate in enumerate(send_candidates, 1)
+            if index not in excluded_index_set
+        ]
         break
 
-    print(f"\n선택된 발송 대상 ({len(selected)}명):")
+    if excluded:
+        print(f"\n발송 제외 대상 ({len(excluded)}명):")
+        for index, candidate in enumerate(excluded, 1):
+            print(f"  {index}. {candidate.get('name', '')} | {candidate.get('phone', '')}")
+    else:
+        print("\n발송 제외 대상 없음")
+
+    print(f"\n최종 발송 대상 ({len(selected)}명):")
     for index, candidate in enumerate(selected, 1):
         print(f"  {index}. {candidate.get('name', '')} | {candidate.get('phone', '')}")
 
@@ -135,6 +148,9 @@ def main() -> int:
         print("발송을 취소했습니다")
         app_logger.info("담당자 확인에서 발송 취소")
         return 0
+    if not selected:
+        print("발송 대상이 없어 종료합니다")
+        return _write_results_or_fail(prechecked_results)
 
     send_results = []
     for candidate in selected:

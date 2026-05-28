@@ -33,16 +33,16 @@ class TestResolveCohort:
     """기수 포함(contains) 방식 매핑 검증"""
 
     def test_exact_match(self):
-        assert resolve_cohort("33기") == "33기"
+        assert resolve_cohort("동작") == "동작"
 
     def test_prefix_text(self):
-        assert resolve_cohort("SFAC 33기") == "33기"
+        assert resolve_cohort("SFAC 동작 33기") == "동작"
 
     def test_suffix_text(self):
-        assert resolve_cohort("33기 수강생") == "33기"
+        assert resolve_cohort("서초 수강생") == "서초"
 
     def test_embedded_text(self):
-        assert resolve_cohort("플레이데이터 34기 수강생") == "34기"
+        assert resolve_cohort("플레이데이터 G밸리 34기 수강생") == "G밸리"
 
     def test_unknown_cohort_returns_none(self):
         assert resolve_cohort("35기 지원자") is None
@@ -56,13 +56,14 @@ class TestResolveCohort:
 
 class TestCohortSenderMap:
     def test_known_cohort_has_sender(self):
-        assert COHORT_SENDER_MAP.get("33기") == "01025327302"
-        assert COHORT_SENDER_MAP.get("34기") == "01067757302"
+        assert COHORT_SENDER_MAP.get("동작") == "010-6775-7302"
+        assert COHORT_SENDER_MAP.get("서초") == "010-2532-7302"
+        assert COHORT_SENDER_MAP.get("G밸리") == "010-2598-7302"
 
     def test_resolved_cohort_maps_to_sender(self):
         """resolve_cohort 결과로 발신번호를 가져올 수 있는지 확인"""
-        rc = resolve_cohort("SFAC 33기")
-        assert COHORT_SENDER_MAP.get(rc) == "01025327302"
+        rc = resolve_cohort("SFAC 동작 33기")
+        assert COHORT_SENDER_MAP.get(rc) == "010-6775-7302"
 
     def test_unknown_cohort_returns_none(self):
         assert COHORT_SENDER_MAP.get("99기") is None
