@@ -11,7 +11,8 @@ PPURIO_ID = os.getenv("PPURIO_ID")
 PPURIO_KEY = os.getenv("PPURIO_KEY")
 
 # 노션 설정
-NOTION_DB_ID = "8336a73c082d411c8275a1c3015cb36e"
+# 멀티 데이터소스 DB의 실제 데이터소스 ID (DB ID 아님). 신규 API는 data_sources 엔드포인트로 조회.
+NOTION_DATA_SOURCE_ID = "837e6b2f06db48f3862d8ccd769cd310"
 NOTION_FIELD_DATE = "인터뷰일시"
 NOTION_FIELD_COHORT = "기수"
 NOTION_FIELD_PHONE = "연락처"
