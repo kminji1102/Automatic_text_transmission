@@ -36,6 +36,23 @@ class TestSendLms:
         assert result["result"] == "실패"
         assert "Connection error" in result["error_msg"]
 
+    def test_returns_actionable_failure_on_invalid_ip(self):
+        token_response = MagicMock()
+        token_response.raise_for_status.side_effect = requests.HTTPError(
+            "400 Client Error"
+        )
+        token_response.json.return_value = {"code": "3003", "description": "invalid ip"}
+        token_response.text = '{"code":"3003","description":"invalid ip"}'
+
+        with patch("ppurio_client.requests.post", return_value=token_response):
+            result = send_lms(
+                phone="01012345678", sender="01025327302", message="테스트"
+            )
+
+        assert result["result"] == "실패(허용IP)"
+        assert "뿌리오 허용 IP" in result["error_msg"]
+        assert "3003" in result["error_msg"]
+
     def test_issues_token_then_sends_with_bearer(self):
         token_response = MagicMock()
         token_response.json.return_value = {"token": "access-token-123"}
